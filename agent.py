@@ -37,22 +37,36 @@ class Agent:
             X.append(state)
             y.append([new_q_value])
 
-        self.main_model.fit(np.array(X), np.array(y), batch_size=Agent.BATCH_SIZE)
+        X = np.array(X, dtype=np.float64)
+        y = np.array(y, dtype=np.float64)
+
+        self.main_model.fit(X, y, shuffle=False, batch_size=Agent.BATCH_SIZE, verbose=False)
 
         self.update_target_counter += 1
         if self.update_target_counter > Agent.UPDATE_TARGET:
+            #print('setting target weights')
             self.target_model.set_weights(self.main_model.get_weights())
             self.update_target_counter = 0
 
 
+    def get_best_action(self, action_state_pairs):
+        states = np.array([s for _, s in action_state_pairs]).astype(np.float64)
+        q_values = self.main_model.predict(states)
+        best_action_idx = np.argmax(q_values)
+        return action_state_pairs[best_action_idx][0]
 
-def create_model():
-    model = tf.keras.models.Sequential(
-        tf.keras.layers.Dense(16),
-        tf.keras.layers.Dense(1)
-    )
-    model.compile(loss='mse', optimizer='adam')
-    return model
+
+
+
 
 if __name__ == '__main__':
-    agent = Agent()
+
+    def __create_model():
+        model = tf.keras.models.Sequential(
+            tf.keras.layers.Dense(16),
+            tf.keras.layers.Dense(1)
+        )
+        model.compile(loss='mse', optimizer='adam')
+        return model
+
+    agent = Agent(__create_model)

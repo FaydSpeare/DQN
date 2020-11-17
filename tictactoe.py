@@ -21,14 +21,13 @@ class TicTacToeEnv(Env):
 
     def __init__(self):
         super().__init__()
-
         self.state = None
         self.turn = None
-        self.reset()
 
     def reset(self):
         self.state = [TicTacToeEnv.EMPTY for i in range(9)]
         self.turn = TicTacToeEnv.P1
+        return self.state
 
     def step(self, action):
 
