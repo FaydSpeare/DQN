@@ -1,3 +1,5 @@
+import random
+
 from env import Env
 
 class TicTacToeEnv(Env):
@@ -35,20 +37,19 @@ class TicTacToeEnv(Env):
         self.state[action] = self.turn
         self.turn = TicTacToeEnv.P2 if self.turn == TicTacToeEnv.P1 else TicTacToeEnv.P1
 
-        return self.state, *self._get_reward()
-
+        reward, done = self._get_reward()
+        return self.state, reward, done
 
     def get_state_action_pairs(self):
         pairs = []
-        for action in self._get_actions():
+        for action in self.get_actions():
             copy_state = self.state[::]
             copy_state[action] = self.turn
             pairs.append((action, copy_state))
         return pairs
 
-    def _get_actions(self):
+    def get_actions(self):
         return [i for i, v in enumerate(self.state) if v == TicTacToeEnv.EMPTY]
-
 
     def _validate_action(self, action):
         assert self.state[action] == TicTacToeEnv.EMPTY
@@ -69,10 +70,11 @@ class TicTacToeEnv(Env):
 
 
 
-
-
-
-
-
 if __name__ == '__main__':
+
     env = TicTacToeEnv()
+    while True:
+        a, _ = random.choice(env.get_actions())
+        s, r, d = env.step(a)
+        print(s, r)
+        if d: break
