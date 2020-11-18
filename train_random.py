@@ -16,7 +16,7 @@ def __create_model():
     return model
 
 MIN_EPSILON = 0.
-EPSILON_DECAY = 0.999
+EPSILON_DECAY = 0.99
 MIN_EPSILON = 0.001
 
 def run():

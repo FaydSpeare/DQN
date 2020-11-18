@@ -5,16 +5,29 @@ import numpy as np
 
 class Agent:
 
-    REPLAY_MEMORY_SIZE = 1000
-    BATCH_SIZE = 100
-    DISCOUNT = 0.95
-    UPDATE_TARGET = 50
+    REPLAY_MEMORY_SIZE = 2_500
+    BATCH_SIZE = 500
+    DISCOUNT = 0.99
+    UPDATE_TARGET = 200
 
     def __init__(self, model_factory):
         self.main_model = model_factory()
         self.target_model = model_factory()
         self.replay_memory = deque(maxlen=Agent.REPLAY_MEMORY_SIZE)
         self.update_target_counter = 0
+
+    @classmethod
+    def load_agent(cls, model):
+        trained_agent = Agent(lambda : None)
+        trained_agent.main_model = model
+        trained_agent.target_model = model
+        return trained_agent
+
+    def duplicate(self):
+        copy_agent = Agent(lambda: None)
+        copy_agent.main_model = self.main_model
+        copy_agent.target_model = self.target_model
+        return copy_agent
 
 
     def update_replay_memory(self, replay):
@@ -49,10 +62,12 @@ class Agent:
             self.update_target_counter = 0
 
 
-    def get_best_action(self, action_state_pairs):
+    def get_best_action(self, action_state_pairs, inverted=False, verbose=False):
         states = np.array([s for _, s in action_state_pairs]).astype(np.float64)
         q_values = self.main_model.predict(states)
-        best_action_idx = np.argmax(q_values)
+        if verbose:
+            print({action_state_pairs[i][0]: float(q) for i, q in enumerate(q_values)})
+        best_action_idx = np.argmax(q_values) if not inverted else np.argmin(q_values)
         return action_state_pairs[best_action_idx][0]
 
 
