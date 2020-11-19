@@ -5,12 +5,13 @@ import numpy as np
 
 class Agent:
 
-    REPLAY_MEMORY_SIZE = 2_500
-    BATCH_SIZE = 500
+    REPLAY_MEMORY_SIZE = 128
+    BATCH_SIZE = 32
     DISCOUNT = 0.99
-    UPDATE_TARGET = 200
+    UPDATE_TARGET = 25
 
     def __init__(self, model_factory):
+        self.model_factory = model_factory
         self.main_model = model_factory()
         self.target_model = model_factory()
         self.replay_memory = deque(maxlen=Agent.REPLAY_MEMORY_SIZE)
@@ -24,9 +25,9 @@ class Agent:
         return trained_agent
 
     def duplicate(self):
-        copy_agent = Agent(lambda: None)
-        copy_agent.main_model = self.main_model
-        copy_agent.target_model = self.target_model
+        copy_agent = Agent(self.model_factory)
+        copy_agent.main_model.set_weights(self.main_model.get_weights())
+        copy_agent.target_model.set_weights(self.target_model.get_weights())
         return copy_agent
 
 
@@ -63,11 +64,18 @@ class Agent:
 
 
     def get_best_action(self, action_state_pairs, inverted=False, verbose=False):
-        states = np.array([s for _, s in action_state_pairs]).astype(np.float64)
-        q_values = self.main_model.predict(states)
+
+        outcomes = np.array([out for _, out in action_state_pairs])
+        new_shape = (outcomes.shape[0] * outcomes.shape[1],  outcomes.shape[2])
+        reshaped = np.reshape(outcomes, new_shape)
+        predictions = self.main_model.predict(reshaped)
+        q_values = np.split(predictions, len(outcomes))
+        values = np.max(q_values, axis=1) if inverted else np.min(q_values, axis=1)
+
         if verbose:
-            print({action_state_pairs[i][0]: float(q) for i, q in enumerate(q_values)})
-        best_action_idx = np.argmax(q_values) if not inverted else np.argmin(q_values)
+            print([(pair[0], values[i]) for i, pair in enumerate(action_state_pairs)])
+
+        best_action_idx = np.argmax(values) if not inverted else np.argmin(values)
         return action_state_pairs[best_action_idx][0]
 
 

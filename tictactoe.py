@@ -49,12 +49,31 @@ class TicTacToeEnv(Env):
 
     def get_state_action_pairs(self):
         pairs = []
+
         for action in self.get_actions():
+            outcomes = []
+
+            turn = self.turn
             copy_state = self.state[::]
             copy_state[action] = 0
-            copy_state[action + self.turn * 9] = 1
-            TicTacToeEnv._validate_state(copy_state)
-            pairs.append((action, copy_state))
+            copy_state[action + turn * 9] = 1
+            turn = 3 - turn
+
+            next_actions = [i for i in range(9) if copy_state[i] == 1]
+            for next_action in next_actions:
+
+                copy_copy_state = copy_state[::]
+                copy_copy_state[next_action] = 0
+                copy_copy_state[next_action + turn * 9] = 1
+
+                TicTacToeEnv._validate_state(copy_copy_state)
+                outcomes.append(copy_copy_state)
+
+            if len(next_actions) == 0:
+                outcomes.append(copy_state)
+
+            pairs.append((action, outcomes))
+
         return pairs
 
     def get_actions(self):

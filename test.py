@@ -8,23 +8,16 @@ from printing import print_state
 
 if __name__ == '__main__':
 
-    model = keras.models.load_model('/home/fayd/Fayd/Projects/DQN/models/1605621282.0392525.model')
+    model = keras.models.load_model('/home/fayd/Fayd/Projects/DQN/models/1605773455.5671754.model')
     env = TicTacToeEnv()
     state = env.reset()
     agent = Agent.load_agent(model)
 
-    output = model.predict([
-        [
-            -1,  1, -1,
-             1,  1,  0,
-            -1,  1, -1,
-        ]
-    ])
-    print(output)
-
     while True:
         print()
         print_state(state)
+        print(agent.main_model.predict([state]))
+        print()
 
         first = True
         agent_turn = TicTacToeEnv.P1 if not first else TicTacToeEnv.P2
@@ -40,6 +33,7 @@ if __name__ == '__main__':
         if done:
             print()
             print_state(state)
+            print(agent.main_model.predict([state]))
             break
 
 
