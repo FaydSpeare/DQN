@@ -29,7 +29,7 @@ def create_network():
 if __name__ == '__main__':
 
     network = create_network()
-    memory = Memory()
+    memory = Memory(size=256)
 
     for sp in range(20):
         print("Sp:", sp)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             memory.push_pending_memory(result)
 
         print(results)
-        X, y = memory.sample(size=1024)
+        X, y = memory.sample(size=256)
         network.fit(X, y, batch_size=32, epochs=10)
         print()
 
