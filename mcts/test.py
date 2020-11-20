@@ -18,11 +18,14 @@ if __name__ == '__main__':
 
     while not state.result()[1]:
 
-        if step % 2 == 1:
-            action = int(input('Action: '))
-            state.make_move(action)
+        if step % 2 == 0:
+            #action = int(input('Action: '))
+            #state.make_move(action)
+            state = uct(state).state
         else:
             state = uct(state).state
+
+
 
 
         print_state(state)

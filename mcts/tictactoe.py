@@ -48,6 +48,12 @@ class TicTacToe:
     def result(self):
         return TicTacToe.__result(self.state)
 
+
+    def get_nn_input(self):
+        game_state = self.state[::]
+        game_state.append(self.turn)
+        return game_state
+
     @staticmethod
     def get_moves(state):
         return [i for i, t in enumerate(state) if t == EMPTY]

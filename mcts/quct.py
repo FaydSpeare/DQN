@@ -2,7 +2,7 @@ import numpy as np
 from collections import deque
 import random
 
-def quct(state, network, n=500):
+def quct(state, network, memory, n=10, best=False, verbose=False):
 
     root = Node(parent=None, state=state)
 
@@ -17,16 +17,32 @@ def quct(state, network, n=500):
         child_node = node.expand() if not node.is_terminal() else node
 
         # Rollout (simulate game from child node)
-        # result = child_node.rollout()
-        result = network.predict([child_node.state])
-        # TODO use real value if child node is terminal
+        if child_node.is_terminal():
+            result = child_node.state.result()[0]
+        else:
+            result = network.predict([child_node.state.get_nn_input()])[0][0]
+
+        #result *= state.turn
+        result *= -child_node.state.turn
 
         # Back-propagate
-        child_node.backprop(state.turn, result)
+        child_node.backprop(result)
 
-    # TODO add training sample with (state, Q=wins/visits)
+    # Add memory for training
+    s = state.get_nn_input()
+    q = root.wins / root.visits
 
-    return max(root.children, key=lambda c: c.wins / c.visits)
+    if memory is not None:
+        memory.add_pending_memory((s, q))
+
+    if verbose:
+        for c in root.children:
+            print(c.state.state, c.visits, c.wins)
+
+    if best: return max(root.children, key=lambda c: (c.visits, c.wins))
+
+    weights = [c.visits / c.parent.visits for c in root.children]
+    return random.choices(root.children, weights=weights, k=1)[0]
 
 
 
@@ -57,10 +73,10 @@ class Node:
     def rollout(self):
         return self.state.simulate()
 
-    def backprop(self, player, result):
+    def backprop(self, result):
         self.visits += 1
-        self.wins += (result * -self.state.turn) * player
-        if self.parent is not None: self.parent.backprop(player, result)
+        self.wins += result
+        if self.parent is not None: self.parent.backprop(-result)
 
     def is_terminal(self):
         return self.state.result()[1]
@@ -70,9 +86,20 @@ class Memory:
 
     def __init__(self, size=1024):
         self.memory = deque(maxlen=size)
+        self.pending_memory = []
 
-    def add_memory(self, memory):
-        self.memory.append(memory)
+    def add_pending_memory(self, memory):
+        self.pending_memory.append(memory)
+
+    def push_pending_memory(self, result):
+        for memory in self.pending_memory:
+            self.memory.append((*memory, result))
+        self.pending_memory = []
 
     def sample(self, size=128):
-        return random.sample(self.memory, k=size)
+        sample = random.sample(self.memory, k=min(size, len(self.memory)))
+        X, y = [], []
+        for s, q, z in sample:
+            X.append(s)
+            y.append((z + q) / 2)
+        return np.array(X), np.array(y)

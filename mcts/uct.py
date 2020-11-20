@@ -1,7 +1,7 @@
 import numpy as np
 
-def uct(state, n=500):
-
+def uct(state, n=1000):
+    print(state.turn)
     root = Node(parent=None, state=state)
 
     for sim in range(n):
@@ -16,10 +16,12 @@ def uct(state, n=500):
 
         # Rollout (simulate game from child node)
         result = child_node.rollout()
+        result *= -child_node.state.turn
 
         # Back-propagate
-        child_node.backprop(state.turn, result)
+        child_node.backprop(result)
 
+    print(state.turn)
     return max(root.children, key=lambda c: c.wins / c.visits)
 
 
@@ -51,10 +53,10 @@ class Node:
     def rollout(self):
         return self.state.simulate()
 
-    def backprop(self, player, result):
+    def backprop(self, result):
         self.visits += 1
-        self.wins += (result * -self.state.turn) * player
-        if self.parent is not None: self.parent.backprop(player, result)
+        self.wins += result
+        if self.parent is not None: self.parent.backprop(-result)
 
     def is_terminal(self):
         return self.state.result()[1]
