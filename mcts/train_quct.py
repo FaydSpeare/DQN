@@ -1,14 +1,7 @@
 import tensorflow as tf
 
-from mcts.tictactoe import TicTacToe
-from mcts.quct import quct, Memory
-
-char_map = {0: '-', 1: 'x', -1: 'o'}
-
-def print_state(state):
-    for i in range(3):
-        print(char_map[state.state[3*i]] + char_map[state.state[3*i+1]] + char_map[state.state[3*i+2]])
-    print()
+from mcts.env.tictactoe import TicTacToe
+from mcts.quct.quct import quct, Memory
 
 def create_network():
     model = tf.keras.models.Sequential([

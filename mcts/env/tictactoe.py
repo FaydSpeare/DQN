@@ -44,7 +44,6 @@ class TicTacToe:
         self.state[action] = self.turn
         self.turn *= -1
 
-
     def result(self):
         return TicTacToe.__result(self.state)
 
@@ -70,5 +69,12 @@ class TicTacToe:
             return EMPTY, True
 
         return EMPTY, False
+
+    def __repr__(self):
+        char_map = {0: '-', 1: 'x', -1: 'o'}
+        s = ''
+        for i in range(3):
+            s += char_map[self.state[3 * i]] + char_map[self.state[3 * i + 1]] + char_map[self.state[3 * i + 2]] + '\n'
+        return s + '\n'
 
 

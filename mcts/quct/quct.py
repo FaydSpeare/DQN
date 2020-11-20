@@ -1,8 +1,12 @@
 import numpy as np
 from collections import deque
 import random
+import time
 
 def quct(state, network, memory, n=10, best=False, verbose=False):
+
+    start = time.time()
+    predict_time = 0.0
 
     root = Node(parent=None, state=state)
 
@@ -20,7 +24,9 @@ def quct(state, network, memory, n=10, best=False, verbose=False):
         if child_node.is_terminal():
             result = child_node.state.result()[0]
         else:
+            p_start = time.time()
             result = network.predict(np.array([child_node.state.get_nn_input()]))[0][0]
+            predict_time += (time.time() - p_start)
 
         #result *= state.turn
         result *= -child_node.state.turn
@@ -39,7 +45,11 @@ def quct(state, network, memory, n=10, best=False, verbose=False):
         for c in root.children:
             print(c.state.state, c.visits, c.wins)
 
+    print(time.time() - start, predict_time)
+
     if best: return max(root.children, key=lambda c: (c.visits, c.wins))
+
+
 
     weights = [c.visits / c.parent.visits for c in root.children]
     return random.choices(root.children, weights=weights, k=1)[0]
