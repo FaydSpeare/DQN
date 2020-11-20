@@ -31,12 +31,12 @@ if __name__ == '__main__':
     network = create_network()
     memory = Memory()
 
-    for sp in range(10):
+    for sp in range(20):
         print("Sp:", sp)
 
         results = [0, 0, 0]
 
-        for episode in range(2):
+        for episode in range(20):
             print("Ep:", episode)
 
             state = TicTacToe()
