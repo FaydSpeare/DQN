@@ -9,8 +9,6 @@ char_map = {0: '-', 1: 'x', -1: 'o'}
 
 if __name__ == '__main__':
 
-    tf.config.run_functions_eagerly(True)
-
     network = tf.keras.models.load_model('/home/fayd/Fayd/Projects/DQN/mcts/models/quct_avg')
     output = network.predict([[
        -1, 1, 1,
