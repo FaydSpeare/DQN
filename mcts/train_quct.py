@@ -3,6 +3,7 @@ import tensorflow as tf
 from mcts.env.tictactoe import TicTacToe
 from mcts.quct.quct import quct, Memory
 
+'''
 def create_network():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Dense(32, activation='relu'),
@@ -11,7 +12,19 @@ def create_network():
     ])
     model.compile(loss='mse', optimizer='adam')
     model.build((None, 10))
+    return 
+'''
+
+def create_network():
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Conv2D(filters=10, kernel_size=3, activation='relu'),
+        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(1, activation='softsign')
+    ])
+    model.compile(loss='mse', optimizer='adam')
+    model.build((None, 3, 3, 4))
     return model
+
 
 if __name__ == '__main__':
 
@@ -23,7 +36,7 @@ if __name__ == '__main__':
 
         results = [0, 0, 0]
 
-        for episode in range(20):
+        for episode in range(2):
             print("Ep:", episode)
 
             state = TicTacToe()

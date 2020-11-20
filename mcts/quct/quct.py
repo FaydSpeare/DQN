@@ -5,7 +5,6 @@ import time
 
 def quct(state, network, memory, n=10, best=False, verbose=False):
 
-    start = time.time()
     predict_time = 0.0
 
     root = Node(parent=None, state=state)
@@ -23,9 +22,11 @@ def quct(state, network, memory, n=10, best=False, verbose=False):
         # Rollout (simulate game from child node)
         if child_node.is_terminal():
             result = child_node.state.result()[0]
+
         else:
             p_start = time.time()
-            result = network.predict(np.array([child_node.state.get_nn_input()]))[0][0]
+            nn_input = np.array([child_node.state.get_nn_input()])
+            result = network.predict(nn_input).flatten()[0]
             predict_time += (time.time() - p_start)
 
         #result *= state.turn
@@ -44,8 +45,6 @@ def quct(state, network, memory, n=10, best=False, verbose=False):
     if verbose:
         for c in root.children:
             print(c.state.state, c.visits, c.wins)
-
-    print(time.time() - start, predict_time)
 
     if best: return max(root.children, key=lambda c: (c.visits, c.wins))
 

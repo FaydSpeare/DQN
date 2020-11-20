@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 WINNING_COMBINATIONS = [
     [0, 1, 2],
@@ -49,9 +50,13 @@ class TicTacToe:
 
 
     def get_nn_input(self):
-        game_state = self.state[::]
-        game_state.append(self.turn)
-        return game_state
+        game_state = np.zeros((4, 3, 3))
+        for idx, tile in enumerate(self.state):
+            if tile == 0: game_state[0][idx % 3][idx // 3] = 1
+            if tile == -1: game_state[1][idx % 3][idx // 3] = 1
+            if tile == 1: game_state[2][idx % 3][idx // 3] = 1
+            game_state[3] = np.ones((3, 3)) * self.turn
+        return game_state.swapaxes(0, 2)
 
     @staticmethod
     def get_moves(state):
