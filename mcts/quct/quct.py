@@ -20,7 +20,7 @@ def quct(state, network, memory, n=10, best=False, verbose=False):
         if child_node.is_terminal():
             result = child_node.state.result()[0]
         else:
-            result = network.predict([child_node.state.get_nn_input()])[0][0]
+            result = network.predict(np.array([child_node.state.get_nn_input()]))[0][0]
 
         #result *= state.turn
         result *= -child_node.state.turn

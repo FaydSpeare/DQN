@@ -1,6 +1,7 @@
 import numpy as np
+import random
 
-def uct(state, n=1000):
+def uct(state, n=1000, verbose=False, best=False):
     print(state.turn)
     root = Node(parent=None, state=state)
 
@@ -21,8 +22,14 @@ def uct(state, n=1000):
         # Back-propagate
         child_node.backprop(result)
 
-    print(state.turn)
-    return max(root.children, key=lambda c: c.wins / c.visits)
+    if verbose:
+        for c in root.children:
+            print(c.state.state, c.visits, c.wins)
+
+    if best: return max(root.children, key=lambda c: (c.visits, c.wins))
+
+    weights = [c.visits / c.parent.visits for c in root.children]
+    return random.choices(root.children, weights=weights, k=1)[0]
 
 
 
