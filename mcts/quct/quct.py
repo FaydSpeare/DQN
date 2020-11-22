@@ -1,114 +1,60 @@
 import numpy as np
-from collections import deque
 import random
-import time
 
-def quct(state, network, memory, n=10, best=False, verbose=False):
+from mcts.uct.node import Node
+from games.base import BaseGame
 
-    predict_time = 0.0
 
-    root = Node(parent=None, state=state)
+def quct(root_game: BaseGame, network, memory, n=50, verbose=False, best=False):
+
+    root = Node(parent=None, actions=root_game.get_legal_moves())
 
     for sim in range(n):
 
+        # Clone game
+        game = root_game.copy()
+
         # Selection (Select a node to expand)
         node = root
-        while node.is_expanded() and not node.is_terminal():
-            node = node.get_best_child()
+        while node.is_expanded() and not game.is_terminal():
+            action, node = node.select_best_child()
+            game.act(action)
 
-        # Expansion (Add new child to selected node)
-        child_node = node.expand() if not node.is_terminal() else node
+        # Expansion (Adding all the children)
+        if not game.is_terminal():
+            action = node.expand()
+            game.act(action)
+            child = Node(parent=node, actions=game.get_legal_moves())
+            node.children[action] = child
+            node = child
 
         # Rollout (simulate game from child node)
-        if child_node.is_terminal():
-            result = child_node.state.result()[0]
-
+        if game.is_terminal():
+            result = game.result()[0]
         else:
-            p_start = time.time()
-            nn_input = np.array([child_node.state.get_nn_input()])
+            nn_input = np.array([game.to_nn_input()])
             result = network.predict(nn_input).flatten()[0]
-            predict_time += (time.time() - p_start)
 
-        #result *= state.turn
-        result *= -child_node.state.turn
+        result *= -game.to_play()
 
         # Back-propagate
-        child_node.backprop(result)
+        node.backprop(result)
 
     # Add memory for training
-    s = state.get_nn_input()
+    s = root_game.to_nn_input()
     q = root.wins / root.visits
 
     if memory is not None:
         memory.add_pending_memory((s, q))
 
     if verbose:
-        for c in root.children:
-            print(c.state.state, c.visits, c.wins)
+        for action, child in root.children.items():
+            print(f'Action: {action} ~ Visits: {child.visits} ~ Value: {child.wins}')
+        print()
 
-    if best: return max(root.children, key=lambda c: (c.visits, c.wins))
+    if best: return max(root.children, key=lambda a: (root.children[a].visits, root.children[a].wins))
 
-
-
-    weights = [c.visits / c.parent.visits for c in root.children]
-    return random.choices(root.children, weights=weights, k=1)[0]
-
+    weights = [c.visits / c.parent.visits for c in root.children.values()]
+    return random.choices(list(root.children.keys()), weights=weights, k=1)[0]
 
 
-class Node:
-
-    C = 2.5
-
-    def __init__(self, parent, state):
-        self.parent = parent
-        self.state = state
-        self.child_states = state.get_next_states()
-        self.children = list()
-        self.visits = 0
-        self.wins = 0
-
-    def expand(self):
-        child = Node(parent=self, state=self.child_states.pop())
-        self.children.append(child)
-        return child
-
-    def is_expanded(self):
-        return len(self.child_states) == 0
-
-    def get_best_child(self):
-        return max(self.children, key=lambda c: (c.wins / c.visits) +
-            Node.C * np.sqrt((2.0 * np.log(self.visits)) / c.visits))
-
-    def rollout(self):
-        return self.state.simulate()
-
-    def backprop(self, result):
-        self.visits += 1
-        self.wins += result
-        if self.parent is not None: self.parent.backprop(-result)
-
-    def is_terminal(self):
-        return self.state.result()[1]
-
-
-class Memory:
-
-    def __init__(self, size=1024):
-        self.memory = deque(maxlen=size)
-        self.pending_memory = []
-
-    def add_pending_memory(self, memory):
-        self.pending_memory.append(memory)
-
-    def push_pending_memory(self, result):
-        for memory in self.pending_memory:
-            self.memory.append((*memory, result))
-        self.pending_memory = []
-
-    def sample(self, size=128):
-        sample = random.sample(self.memory, k=min(size, len(self.memory)))
-        X, y = [], []
-        for s, q, z in sample:
-            X.append(s)
-            y.append((z + q) / 2)
-        return np.array(X), np.array(y)

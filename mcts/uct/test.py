@@ -1,5 +1,5 @@
-from mcts.tictactoe import TicTacToe
-from mcts.uct import uct
+from games.tictactoe import TicTacToe
+from mcts.uct.uct import uct
 
 char_map = {0: '-', 1: 'x', -1: 'o'}
 
@@ -18,12 +18,12 @@ if __name__ == '__main__':
 
     while not state.result()[1]:
 
-        if step % 2 == 0:
-            #action = int(input('Action: '))
-            #state.make_move(action)
-            state = uct(state).state
+        if step % 2 == 1:
+            action = int(input('Action: '))
         else:
-            state = uct(state).state
+            action = uct(state, n=1000, best=False, verbose=True)
+
+        state.act(action)
 
 
 
