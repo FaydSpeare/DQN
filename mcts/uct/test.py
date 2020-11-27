@@ -1,18 +1,14 @@
+import time
+
 from games.tictactoe import TicTacToe
+from games.connect4 import Connect4
 from mcts.uct.uct import uct
-
-char_map = {0: '-', 1: 'x', -1: 'o'}
-
-def print_state(state):
-    for i in range(3):
-        print(char_map[state.state[3*i]] + char_map[state.state[3*i+1]] + char_map[state.state[3*i+2]])
-    print()
 
 
 if __name__ == '__main__':
 
-    state = TicTacToe()
-    print_state(state)
+    state = Connect4()
+    print(state)
 
     step = 0
 
@@ -21,14 +17,12 @@ if __name__ == '__main__':
         if step % 2 == 1:
             action = int(input('Action: '))
         else:
-            action = uct(state, n=1000, best=False, verbose=True)
-
+            start = time.time()
+            action = uct(state, n=1000, best=True, verbose=True)
+            print(time.time() - start)
         state.act(action)
 
-
-
-
-        print_state(state)
+        print(state)
 
         step += 1
 

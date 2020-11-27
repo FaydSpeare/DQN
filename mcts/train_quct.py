@@ -1,7 +1,8 @@
 import tensorflow as tf
 
-from mcts.env.tictactoe import TicTacToe
-from mcts.quct.quct import quct, Memory
+from games.connect4 import Connect4
+from mcts.quct.quct import quct
+from mcts.quct.memory import Memory
 
 '''
 def create_network():
@@ -18,18 +19,20 @@ def create_network():
 def create_network():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(filters=10, kernel_size=3, activation='relu'),
+        tf.keras.layers.Conv2D(filters=5, kernel_size=3, activation='relu'),
+        tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='softsign')
     ])
     model.compile(loss='mse', optimizer='adam')
-    model.build((None, 3, 3, 4))
+    model.build((None, 6, 7, 4))
     return model
 
 
 if __name__ == '__main__':
 
     network = create_network()
-    memory = Memory(size=256)
+    memory = Memory(size=1024)
 
     for sp in range(20):
         print("Sp:", sp)
@@ -39,29 +42,28 @@ if __name__ == '__main__':
         for episode in range(20):
             print("Ep:", episode)
 
-            state = TicTacToe()
+            game = Connect4()
             step = 0
-            #print_state(state)
 
-            while not state.result()[1]:
+            while not game.is_terminal():
 
-                use_best = (step > 1)
-                state = quct(state, network, memory, n=50, best=use_best).state
+                use_best = (step > 3)
+                action = quct(game, network, memory, n=50, best=use_best)
+                game.act(action)
                 step += 1
-                #print_state(state)
 
-            result = state.result()[0]
+            result = game.result()[0]
             results[result + 1] += 1
 
-            memory.add_pending_memory((state.get_nn_input(), result))
+            memory.add_pending_memory((game.to_nn_input(), result))
             memory.push_pending_memory(result)
 
         print(results)
-        X, y = memory.sample(size=256)
+        X, y = memory.sample(size=1024)
         network.fit(X, y, batch_size=32, epochs=10)
         print()
 
-    network.save('models/quct_avg')
+    network.save('models/connect4_quct_avg')
 
 
 

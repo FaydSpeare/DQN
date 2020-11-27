@@ -17,6 +17,7 @@ EMPTY = 0
 P1 = 1
 P2 = -1
 
+
 def get_result(state):
 
     for player in [P1, P2]:
